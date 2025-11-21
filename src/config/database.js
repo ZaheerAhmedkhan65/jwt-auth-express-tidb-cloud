@@ -1,82 +1,88 @@
+//src/config/database.js
 class DatabaseConfig {
   constructor(options = {}) {
     this.options = {
-      // Common options for MySQL variants
-      dialect: options.dialect || 'mysql2',
-      host: options.host || 'localhost',
-      port: options.port || 3306,
-      database: options.database || 'auth_db',
-      username: options.username || 'root',
-      password: options.password || '',
-      
-      // SSL options for TiDB Cloud
-      ssl: options.ssl || false,
+      dialect: 'mysql2/promise',
+      host: options.host,
+      port: options.port || 4000,
+      database: options.database,
+      username: options.username,
+      password: options.password,
+
+      // TiDB Cloud requires SSL
+      ssl: true,
       sslCA: options.sslCA,
-      sslCert: options.sslCert,
-      sslKey: options.sslKey,
-      
-      // MySQL specific options
-      timezone: options.timezone || '+00:00',
-      charset: options.charset || 'utf8mb4',
-      
-      // Connection timeout
-      connectTimeout: options.connectTimeout || 60000,
-      
+
+      // Connection settings optimized for TiDB Cloud
+      timezone: '+00:00',
+      charset: 'utf8mb4',
+      connectTimeout: 60000,
+
+      // Connection pool settings
+      connectionLimit: 10,
+      acquireTimeout: 60000,
+      timeout: 60000,
+
       ...options
     };
   }
 
-  // Get MySQL connection configuration
+  // Get TiDB Cloud connection configuration
   getConnectionConfig() {
-    const { 
-      host, 
-      port, 
-      database, 
-      username, 
-      password, 
-      ssl, 
-      timezone, 
-      charset,
-      connectTimeout 
+    const {
+      host,
+      port,
+      database,
+      username,
+      password
     } = this.options;
-    
+
     const baseConfig = {
       host,
       port: parseInt(port),
       user: username,
       password,
       database,
-      charset,
-      timezone,
-      connectTimeout: connectTimeout || 60000
+      charset: 'utf8mb4',
+      timezone: '+00:00',
+      connectTimeout: 60000,
+      ssl: {
+        rejectUnauthorized: false
+      }
     };
-
-    // TiDB Cloud requires SSL
-    if (this.options.dialect === 'tidb' || ssl) {
-      baseConfig.ssl = {
-        rejectUnauthorized: false, // TiDB Cloud uses self-signed certificates
-        ...(this.options.sslCA && { ca: this.options.sslCA })
-      };
-    }
 
     return baseConfig;
   }
 
-  // Validate configuration
+  // Get connection pool configuration
+  getPoolConfig() {
+    return {
+      ...this.getConnectionConfig(),
+      connectionLimit: this.options.connectionLimit,
+      waitForConnections: true,
+      queueLimit: 0
+    };
+  }
+
+  // Validate TiDB Cloud configuration
   validate() {
     const errors = [];
-    const { dialect, host, database, username } = this.options;
+    const { host, database, username, password } = this.options;
 
     if (!host) {
-      errors.push('Database host is required');
+      errors.push('TiDB Cloud host is required');
     }
 
     if (!database) {
-      errors.push('Database name is required');
+      errors.push('TiDB Cloud database name is required');
     }
 
     if (!username) {
-      errors.push('Database username is required');
+      errors.push('TiDB Cloud username is required');
+    }
+
+    if (!password) {
+      errors.push('TiDB Cloud password is required');
     }
 
     return {
@@ -84,45 +90,55 @@ class DatabaseConfig {
       errors
     };
   }
+
+  // Static method to create TiDB Cloud connection
+  static async createTiDBConnection(options) {
+    const config = new DatabaseConfig(options);
+    const validation = config.validate();
+
+    if (!validation.isValid) {
+      throw new Error(`TiDB Cloud configuration invalid: ${validation.errors.join(', ')}`);
+    }
+
+    const poolConfig = config.getPoolConfig();
+
+    console.log('🔧 Creating TiDB Cloud connection with config:', {
+      host: poolConfig.host,
+      port: poolConfig.port,
+      database: poolConfig.database,
+      user: poolConfig.user,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+
+    // Use mysql2/promise for TiDB Cloud
+    const mysql = require('mysql2/promise');
+
+    // Create connection pool
+    const pool = mysql.createPool(poolConfig);
+
+    // Test the connection
+    try {
+      const connection = await pool.getConnection();
+      console.log('✅ TiDB Cloud database connected successfully');
+      connection.release();
+      return pool;
+    } catch (error) {
+      console.error('❌ TiDB Cloud connection failed:', error.message);
+      throw error;
+    }
+  }
 }
 
-// Environment specific configurations
-DatabaseConfig.development = () => {
-  return new DatabaseConfig({
-    dialect: 'mysql2',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    database: process.env.DB_NAME || 'auth_dev',
-    username: process.env.DB_USERNAME || 'root',
-    password: process.env.DB_PASSWORD || '',
-    ssl: false
-  });
-};
-
-DatabaseConfig.production = () => {
-  return new DatabaseConfig({
-    dialect: 'mysql2',
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
-    database: process.env.DB_NAME,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    ssl: process.env.DB_SSL === 'true',
-    sslCA: process.env.DB_SSL_CA
-  });
-};
-
+// TiDB Cloud specific configuration
 DatabaseConfig.tidb = () => {
   return new DatabaseConfig({
-    dialect: 'mysql2/promise',
     host: process.env.TIDB_HOST,
     port: process.env.TIDB_PORT || 4000,
     database: process.env.TIDB_DATABASE,
     username: process.env.TIDB_USERNAME,
-    password: process.env.TIDB_PASSWORD,
-    ssl: true,
-    sslCA: process.env.TIDB_SSL_CA,
-    connectTimeout: 60000
+    password: process.env.TIDB_PASSWORD
   });
 };
 

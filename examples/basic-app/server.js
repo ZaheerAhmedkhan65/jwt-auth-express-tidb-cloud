@@ -21,7 +21,6 @@ async function startServer() {
         username: process.env.TIDB_USERNAME,
         password: process.env.TIDB_PASSWORD,
         ssl: true,
-        sslCA: process.env.TIDB_SSL_CA,
         tableName: 'users'
       },
       tokenExpiry: {

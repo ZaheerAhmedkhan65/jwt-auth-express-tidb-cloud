@@ -4,11 +4,10 @@ const CryptoUtils = require('../utils/crypto');
 class User {
   constructor(database, options = {}) {
     if (!database) {
-      throw new Error('Database connection is required');
+      throw new Error('TiDB Cloud database connection is required');
     }
     
     this.db = database;
-    this.dialect = options.dialect || 'mysql2';
     this.options = {
       tableName: options.tableName || 'users',
       refreshTokensTable: options.refreshTokensTable || 'refresh_tokens',
@@ -16,15 +15,14 @@ class User {
       ...options
     };
 
-    console.log(`📊 User model initialized with dialect: ${this.dialect}`);
+    console.log('📊 User model initialized for TiDB Cloud');
   }
 
-  // Helper method to execute queries and handle responses
+  // Helper method to execute queries
   async _executeQuery(query, params = []) {
     try {
-      console.log(`🔍 Executing query: ${query.substring(0, 100)}...`);
+      console.log(`🔍 Executing TiDB query: ${query.substring(0, 100)}...`);
       
-      // For mysql2/promise, use execute method which returns proper Promise
       const result = await this.db.execute(query, params);
       
       // mysql2/promise returns [rows, fields] structure
@@ -34,7 +32,7 @@ class User {
       
       return result;
     } catch (error) {
-      console.error('❌ Query error:', error.message);
+      console.error('❌ TiDB Query error:', error.message);
       console.error('Query:', query.substring(0, 200));
       throw error;
     }
@@ -334,15 +332,15 @@ class User {
     }
   }
 
-  // Database initialization (create tables)
+  // Database initialization (create tables for TiDB)
   async initDatabase() {
     try {
-      console.log('🔄 Initializing database tables...');
+      console.log('🔄 Initializing TiDB Cloud database tables...');
 
       // Create users table
       const createUsersTable = `
         CREATE TABLE IF NOT EXISTS ${this.options.tableName} (
-          id INT AUTO_INCREMENT PRIMARY KEY,
+          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
           email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           name VARCHAR(100) NOT NULL,
@@ -358,8 +356,8 @@ class User {
       // Create refresh tokens table
       const createRefreshTokensTable = `
         CREATE TABLE IF NOT EXISTS ${this.options.refreshTokensTable} (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          user_id INT NOT NULL,
+          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+          user_id BIGINT UNSIGNED NOT NULL,
           token TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           expires_at TIMESTAMP NOT NULL,
@@ -372,8 +370,8 @@ class User {
       // Create password reset table
       const createPasswordResetTable = `
         CREATE TABLE IF NOT EXISTS ${this.options.passwordResetTable} (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          user_id INT NOT NULL,
+          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+          user_id BIGINT UNSIGNED NOT NULL,
           token VARCHAR(255) NOT NULL,
           is_valid TINYINT(1) DEFAULT 1,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -388,14 +386,14 @@ class User {
       await this._executeQuery(createRefreshTokensTable);
       await this._executeQuery(createPasswordResetTable);
 
-      console.log('✅ Database tables initialized successfully');
+      console.log('✅ TiDB Cloud database tables initialized successfully');
       
     } catch (error) {
-      throw new Error(`Failed to initialize database: ${error.message}`);
+      throw new Error(`Failed to initialize TiDB Cloud database: ${error.message}`);
     }
   }
 
-  // Transaction helpers
+  // Transaction helpers for TiDB
   async _beginTransaction() {
     await this.db.execute('START TRANSACTION');
   }

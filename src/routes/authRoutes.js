@@ -2,7 +2,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 
-const createAuthRoutes = (authController, validationMiddleware) => {
+const createAuthRoutes = (authController, validationMiddleware, authMiddleware) => {
   const router = express.Router();
 
   // Validation rules
@@ -38,7 +38,9 @@ const createAuthRoutes = (authController, validationMiddleware) => {
   router.post('/forgot-password', forgotPasswordValidation, validationMiddleware, authController.forgotPassword);
   router.post('/reset-password', resetPasswordValidation, validationMiddleware, authController.resetPassword);
   router.post('/signout', authController.signOut);
-  router.get('/me', authController.getCurrentUser);
+  
+  // FIXED: Use the provided authMiddleware for protected routes
+  router.get('/me', authMiddleware, authController.getCurrentUser);
 
   return router;
 };

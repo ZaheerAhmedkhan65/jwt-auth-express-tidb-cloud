@@ -30,13 +30,13 @@ class AuthController {
       });
 
       // Generate tokens
-      const accessToken = this.jwtUtils.generateAccessToken({ 
-        userId: user.id, 
-        email: user.email 
+      const accessToken = this.jwtUtils.generateAccessToken({
+        userId: user.id,
+        email: user.email
       });
-      
-      const refreshToken = this.jwtUtils.generateRefreshToken({ 
-        userId: user.id 
+
+      const refreshToken = this.jwtUtils.generateRefreshToken({
+        userId: user.id
       });
 
       // Store refresh token
@@ -90,13 +90,13 @@ class AuthController {
       }
 
       // Generate tokens
-      const accessToken = this.jwtUtils.generateAccessToken({ 
-        userId: user.id, 
-        email: user.email 
+      const accessToken = this.jwtUtils.generateAccessToken({
+        userId: user.id,
+        email: user.email
       });
-      
-      const refreshToken = this.jwtUtils.generateRefreshToken({ 
-        userId: user.id 
+
+      const refreshToken = this.jwtUtils.generateRefreshToken({
+        userId: user.id
       });
 
       // Store refresh token
@@ -140,7 +140,7 @@ class AuthController {
 
       // Verify refresh token
       const decoded = this.jwtUtils.verifyRefreshToken(refreshToken);
-      
+
       // Check if refresh token exists in database
       const user = await this.User.findByRefreshToken(decoded.userId, refreshToken);
       if (!user) {
@@ -151,13 +151,13 @@ class AuthController {
       }
 
       // Generate new tokens
-      const newAccessToken = this.jwtUtils.generateAccessToken({ 
-        userId: user.id, 
-        email: user.email 
+      const newAccessToken = this.jwtUtils.generateAccessToken({
+        userId: user.id,
+        email: user.email
       });
-      
-      const newRefreshToken = this.jwtUtils.generateRefreshToken({ 
-        userId: user.id 
+
+      const newRefreshToken = this.jwtUtils.generateRefreshToken({
+        userId: user.id
       });
 
       // Update refresh token in database
@@ -272,11 +272,19 @@ class AuthController {
     }
   }
 
-  // Get current user
+  // getCurrentUser
   getCurrentUser = async (req, res) => {
     try {
+
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
       const user = await this.User.findById(req.user.userId);
-      
+
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -295,6 +303,7 @@ class AuthController {
         }
       });
     } catch (error) {
+      console.error('❌ Error in getCurrentUser:', error);
       res.status(500).json({
         success: false,
         message: 'Error fetching user data',
