@@ -2,19 +2,23 @@
 require('dotenv').config();
 const express = require('express');
 const JwtAuthExpress = require('../../index');
+const path = require('path');
 const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 async function startServer() {
   try {
-    console.log('🚀 Starting TiDB Cloud Authentication Server...');
+    console.log('🚀 Starting jwt-auth-express-cloud Server...');
 
     // Initialize authentication system with TiDB Cloud
     const auth = await JwtAuthExpress.create({
       secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-123',
       refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-456',
       database: {
-        dialect: 'tidb',
+        dialect: 'mysql2/promise',
         host: process.env.TIDB_HOST,
         port: process.env.TIDB_PORT || 4000,
         database: process.env.TIDB_DATABASE,
@@ -26,16 +30,16 @@ async function startServer() {
       tokenExpiry: {
         access: '15m',
         refresh: '7d'
-      }
+      },
+      basePath: '/o/auth',
+      enableUI: true,
+      // Optional: Provide custom views path
+      // viewsPath: path.join(__dirname, 'custom-views'),
+      // publicPath: path.join(__dirname, 'public')
     });
 
-    console.log('✅ TiDB Cloud authentication system initialized successfully');
-
-    // Setup routes
-    const validationMiddleware = (req, res, next) => next();
-    
-    app.use('/auth', auth.getRoutes(validationMiddleware));
-    app.use('/tokens', auth.getTokenRoutes(validationMiddleware));
+    // Setup the app with authentication
+    auth.setupApp(app, (req, res, next) => next());
 
     // Health check endpoint
     app.get('/health', (req, res) => {
@@ -49,19 +53,12 @@ async function startServer() {
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(`🎯 TiDB Cloud server running on http://localhost:${PORT}`);
-      console.log('\n📍 Available Endpoints:');
-      console.log('   GET  /health              - Health check');
-      console.log('   POST /auth/signup         - User registration');
-      console.log('   POST /auth/signin         - User login');
-      console.log('   POST /auth/refresh-token  - Refresh access token');
-      console.log('   POST /auth/forgot-password- Request password reset');
-      console.log('   POST /auth/signout        - User logout');
-      console.log('   GET  /auth/me             - Get current user (protected)');
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
 
   } catch (error) {
-    console.error('❌ Failed to start TiDB Cloud server:', error.message);
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
   }
 }
 
