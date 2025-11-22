@@ -1,10 +1,15 @@
 //src/middleware/auth.js
-const JWTUtils = require('../utils/jwt');
 
 const authenticateToken = (jwtUtils) => {
   return (req, res, next) => {
+    // Try to get token from Authorization header first
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    let token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    // If no token in header, try to get from cookie
+    if (!token && req.cookies) {
+      token = req.cookies.accessToken;
+    }
 
     if (!token) {
       return res.status(401).json({ 
@@ -28,8 +33,14 @@ const authenticateToken = (jwtUtils) => {
 
 const optionalAuth = (jwtUtils) => {
   return (req, res, next) => {
+    // Try to get token from Authorization header first
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    let token = authHeader && authHeader.split(' ')[1];
+
+    // If no token in header, try to get from cookie
+    if (!token && req.cookies) {
+      token = req.cookies.accessToken;
+    }
 
     if (token) {
       try {

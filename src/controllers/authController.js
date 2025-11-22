@@ -8,6 +8,31 @@ class AuthController {
     this.emailUtils = emailUtils;
   }
 
+  // Helper method to set cookies
+  _setAuthCookies(res, accessToken, refreshToken) {
+    // Set access token cookie (short-lived)
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+
+    // Set refresh token cookie (long-lived)
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+  }
+
+  // Helper method to clear cookies
+  _clearAuthCookies(res) {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+  }
+
   // Sign up
   signUp = async (req, res) => {
     try {
@@ -42,6 +67,9 @@ class AuthController {
       // Store refresh token
       await this.User.storeRefreshToken(user.id, refreshToken);
 
+      // Set cookies
+      this._setAuthCookies(res, accessToken, refreshToken);
+
       res.status(201).json({
         success: true,
         message: 'User created successfully',
@@ -50,10 +78,6 @@ class AuthController {
             id: user.id,
             email: user.email,
             name: user.name
-          },
-          tokens: {
-            accessToken,
-            refreshToken
           }
         }
       });
@@ -102,6 +126,9 @@ class AuthController {
       // Store refresh token
       await this.User.storeRefreshToken(user.id, refreshToken);
 
+      // Set cookies
+      this._setAuthCookies(res, accessToken, refreshToken);
+
       res.json({
         success: true,
         message: 'Login successful',
@@ -110,10 +137,6 @@ class AuthController {
             id: user.id,
             email: user.email,
             name: user.name
-          },
-          tokens: {
-            accessToken,
-            refreshToken
           }
         }
       });
@@ -144,6 +167,7 @@ class AuthController {
       // Check if refresh token exists in database
       const user = await this.User.findByRefreshToken(decoded.userId, refreshToken);
       if (!user) {
+        this._clearAuthCookies(res);
         return res.status(403).json({
           success: false,
           message: 'Invalid refresh token'
@@ -163,12 +187,12 @@ class AuthController {
       // Update refresh token in database
       await this.User.updateRefreshToken(user.id, refreshToken, newRefreshToken);
 
+      // Set new cookies
+      this._setAuthCookies(res, newAccessToken, newRefreshToken);
+
       res.json({
         success: true,
-        data: {
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken
-        }
+        message: 'Token refreshed successfully'
       });
     } catch (error) {
       res.status(403).json({
@@ -252,12 +276,15 @@ class AuthController {
   // Sign out
   signOut = async (req, res) => {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies.refreshToken;
       const userId = req.user?.userId;
 
       if (refreshToken && userId) {
         await this.User.removeRefreshToken(userId, refreshToken);
       }
+
+      // Clear cookies
+      this._clearAuthCookies(res);
 
       res.json({
         success: true,
@@ -272,10 +299,9 @@ class AuthController {
     }
   }
 
-  // getCurrentUser
+  // Get current user
   getCurrentUser = async (req, res) => {
     try {
-
       if (!req.user || !req.user.userId) {
         return res.status(401).json({
           success: false,
@@ -303,7 +329,6 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('❌ Error in getCurrentUser:', error);
       res.status(500).json({
         success: false,
         message: 'Error fetching user data',

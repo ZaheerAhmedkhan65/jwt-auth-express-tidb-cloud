@@ -1,0 +1,196 @@
+/* Auth Styles */
+.auth-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  color: #718096;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-form {
+  margin: 2rem 0;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.form-input {
+  width: 100%;
+  max-width: 90%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.form-help {
+  color: #718096;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.forgot-password {
+  color: #4299e1;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #4299e1;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3182ce;
+}
+
+.btn-secondary {
+  background: #e53e3e;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #c53030;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.auth-links {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #718096;
+}
+
+.auth-link {
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* Alert styles (already included in JS but can be customized here) */
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    min-width: 300px;
+    max-width: 500px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-left: 4px solid #007bff;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.alert-success { border-left-color: #28a745; }
+.alert-error { border-left-color: #dc3545; }
+.alert-warning { border-left-color: #ffc107; }
+.alert-info { border-left-color: #17a2b8; }
+
+.alert-content {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.alert-message {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-close:hover {
+    color: #000;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

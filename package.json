@@ -1,7 +1,7 @@
 {
   "name": "jwt-auth-express-tidb-cloud",
-  "version": "1.0.1",
-  "description": "A comprehensive JWT authentication package for Express.js with TiDB Cloud",
+  "version": "1.0.5",
+  "description": "A comprehensive JWT authentication package for Express.js with TiDB Cloud support and automatic table creation.",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon examples/basic-app/server.js",
@@ -25,7 +25,11 @@
     "bcryptjs": "^2.4.3",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.2",
     "express-validator": "^7.0.1",
+    "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.0",
     "mysql2": "^3.6.0",
     "nodemailer": "^6.9.4",
@@ -38,7 +42,7 @@
     "supertest": "^6.3.0"
   },
   "peerDependencies": {
-    "express": "^4.18.0"
+    "express": "^4.18.0 || ^5.0.0"
   },
   "repository": {
     "type": "git",
